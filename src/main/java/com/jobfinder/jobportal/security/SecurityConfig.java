@@ -108,8 +108,4 @@ public class SecurityConfig {
 
 
 
-//.ignoringRequestMatchers("/api/auth/register") // 👈 Δοκιμαστικά να αγνοείται το CSRF για αυτό
-//.ignoringRequestMatchers("/api/auth/register", "/api/auth/login")
-
-
 

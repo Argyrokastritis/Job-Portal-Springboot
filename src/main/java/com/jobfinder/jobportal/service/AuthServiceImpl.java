@@ -2,8 +2,8 @@ package com.jobfinder.jobportal.service;
 
 import com.jobfinder.jobportal.entity.User;
 import com.jobfinder.jobportal.payload.*;
-import com.jobfinder.jobportal.repository.UserRepository; // ✅ import UserRepository
-import com.jobfinder.jobportal.security.JwtTokenProvider; // ✅ import JwtTokenProvider
+import com.jobfinder.jobportal.repository.UserRepository;
+import com.jobfinder.jobportal.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -34,10 +34,13 @@ public class AuthServiceImpl implements AuthService {
         // 🔐 Δημιούργησε JWT
         String token = jwtTokenProvider.generateToken(user.getEmail());
 
-        // ✨ Επιστροφή του token + role
-        return new LoginResponse(token, user.getRole()); // υποθέτουμε ότι έχει getRole()
-    }
+        // ✨ Πάρε το role και το username από το entity
+        String role = user.getRole();
+        String username = user.getUsername();
 
+        // ✅ Επιστροφή του token + role + username
+        return new LoginResponse(token, role, username);
+    }
 
     @Override
     public void register(RegisterRequest request) {

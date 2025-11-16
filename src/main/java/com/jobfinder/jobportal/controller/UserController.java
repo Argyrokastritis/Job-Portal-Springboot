@@ -22,68 +22,51 @@ public class UserController {
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     public UserController(UserService userService, JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.jwtTokenProvider = jwtTokenProvider;
         this.passwordEncoder = passwordEncoder;
     }
 
-
     // ===============================
     // 🔐 AUTH ENDPOINTS
     // ===============================
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     @PostMapping(value = "/login", produces = "application/json")
     public LoginResponse login(@RequestBody LoginRequest request) {
         Optional<User> optionalUser = userService.findByEmail(request.getEmail());
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
-            System.out.println("🔍 Input password: " + request.getPassword());
-            System.out.println("🔍 Stored hash: " + user.getPassword());
-            System.out.println("✅ Password matches? " + passwordEncoder.matches(request.getPassword(), user.getPassword()));
             if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
                 String token = jwtTokenProvider.generateToken(user.getEmail());
-                String role = user.getRole(); // ✅ ορίζουμε το role από το χρήστη
+                String role = user.getRole();
+                String username = user.getUsername(); // 👈 παίρνουμε το username
 
-                return new LoginResponse(token, role); // ✅ επιστρέφουμε και τα δύο
+                // ✅ Επιστρέφουμε token, role και username
+                return new LoginResponse(token, role, username);
             }
         }
         throw new RuntimeException("Invalid email or password");
     }
 
-
-
     @PostMapping("/register")
     public String register(@RequestBody RegisterRequest request) {
-        System.out.println("Request received: " + request.getEmail());
-        // 🔎 Καταγραφή εισερχόμενων πεδίων για debugging
-        System.out.println("📨 Email: " + request.getEmail());
-        System.out.println("📨 Password: " + request.getPassword());
-        System.out.println("📨 Role: " + request.getRole());
-
-        // ✅ Έλεγχος για διπλό email
         if (userService.existsByEmail(request.getEmail())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Το email υπάρχει ήδη");
         }
 
-        // 👤 Δημιουργία νέου χρήστη
         User newUser = new User();
         newUser.setEmail(request.getEmail());
-        //newUser.setPassword(request.getPassword()); // 💡 Πρόσθεσε PasswordEncoder για ασφάλεια
+        newUser.setUsername(request.getUsername());
         newUser.setPassword(passwordEncoder.encode(request.getPassword()));
-        newUser.setRole(request.getRole() != null ? request.getRole() : "USER"); // default σε περίπτωση null
+        newUser.setRole(request.getRole() != null ? request.getRole() : "USER");
 
-        // 📦 Αποθήκευση
         userService.createUser(newUser);
 
-        // 🎉 Επιτυχές μήνυμα
-        System.out.println("🔐 Stored password: " + newUser.getPassword());
         return "Ο χρήστης δημιουργήθηκε με επιτυχία!";
-
-
     }
 
     // ===============================

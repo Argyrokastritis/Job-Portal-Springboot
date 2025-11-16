@@ -1,5 +1,7 @@
 package com.jobfinder.jobportal.controller;
 
+import java.util.Map;
+import java.util.HashMap;
 import com.jobfinder.jobportal.dto.JobResponse;
 import com.jobfinder.jobportal.entity.Company;
 import com.jobfinder.jobportal.entity.Job;
@@ -95,7 +97,7 @@ public class CompanyJobController {
 
 
     @GetMapping("/jobs")
-    public ResponseEntity<List<JobResponse>> getCompanyJobs(Authentication auth) {
+    public ResponseEntity<Map<String, Object>> getCompanyJobs(Authentication auth) {
         String email = auth.getName();
 
         User user = userRepository.findByEmail(email)
@@ -110,9 +112,14 @@ public class CompanyJobController {
                 .map(JobResponse::new)
                 .toList();
 
+        Map<String, Object> response = new HashMap<>();
+        response.put("companyName", company.getCompanyName()); // 👈 περνάς το όνομα
+        response.put("jobs", jobResponses);
+
         System.out.println("🔄 Επιστρέφονται " + jobResponses.size() + " αγγελίες για την εταιρεία " + company.getCompanyName());
-        return ResponseEntity.ok(jobResponses);
+        return ResponseEntity.ok(response);
     }
+
 
 }
 
